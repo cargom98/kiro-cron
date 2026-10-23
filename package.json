@@ -202,6 +202,10 @@
                 "type": "boolean",
                 "default": true,
                 "description": "Whether this schedule is active."
+              },
+              "sessionTitle": {
+                "type": "string",
+                "description": "Optional title for the revealed session. Defaults to 'Kiro Cron'."
               }
             }
           }
@@ -217,6 +221,12 @@
           "default": false,
           "scope": "resource",
           "description": "If true, a schedule whose fire time was missed while the IDE was closed runs once when the scheduler is enabled on startup."
+        },
+        "kiroCron.revealSession": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "markdownDescription": "When a schedule fires, reveal its session in the sidebar (titled, kept open) instead of leaving it only in history. Note: the Kiro agent does not expose a session-color API, so sessions cannot be color-coded."
         }
       }
     }

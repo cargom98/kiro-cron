@@ -2,7 +2,12 @@ import * as vscode from "vscode";
 import { Schedule, ScheduleRuntime } from "./types";
 import { nextRun, prevRun } from "./cron";
 import * as store from "./store";
-import { runPrompt, isKiroAgentAvailable } from "./kiroAgent";
+import {
+  runPrompt,
+  isKiroAgentAvailable,
+  revealSession,
+  DEFAULT_SESSION_TITLE,
+} from "./kiroAgent";
 
 /**
  * In-process cron scheduler. Runs entirely inside the VS Code extension host
@@ -171,6 +176,14 @@ export class Scheduler implements vscode.Disposable {
           run.created ? "created new" : "reused"
         })`
       );
+
+      // Optionally reveal the session (keep it open + titled) instead of
+      // leaving it only in history. Only meaningful when a new session was
+      // created, or when the user wants it re-focused each run.
+      if (store.getRevealSession()) {
+        const title = schedule.sessionTitle?.trim() || DEFAULT_SESSION_TITLE;
+        await revealSession(run.sessionId, title);
+      }
     } catch (err) {
       rt.lastError = (err as Error).message;
       this.output.appendLine(

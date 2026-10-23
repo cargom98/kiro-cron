@@ -16,6 +16,26 @@ import * as vscode from "vscode";
 
 const CMD_SESSION_CREATE = "kiroAgent.sessions.create";
 const CMD_SESSION_SEND_PROMPT = "kiroAgent.sessions.sendPrompt";
+const CMD_VIEW_SESSION = "kiroAgent.viewSession";
+
+/** Default title applied to scheduled sessions. */
+export const DEFAULT_SESSION_TITLE = "Kiro Cron";
+
+/**
+ * Reveals a session in the sidebar and (best-effort) sets its title, so a
+ * scheduled run stays open and labelled instead of sitting only in history.
+ * Silently ignores failure — revealing is a nicety, not required for the run.
+ */
+export async function revealSession(
+  sessionId: string,
+  title: string = DEFAULT_SESSION_TITLE
+): Promise<void> {
+  try {
+    await vscode.commands.executeCommand(CMD_VIEW_SESSION, sessionId, title);
+  } catch {
+    // Non-fatal: the prompt already ran; revealing just failed.
+  }
+}
 
 export interface CreateSessionResult {
   sessionId?: string;

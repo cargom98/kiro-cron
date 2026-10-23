@@ -90,6 +90,13 @@ export function getCatchUpMissedRuns(): boolean {
     .get<boolean>("catchUpMissedRuns", false);
 }
 
+/** Whether a scheduled run should be revealed/kept open in the sidebar. */
+export function getRevealSession(): boolean {
+  return vscode.workspace
+    .getConfiguration(SECTION)
+    .get<boolean>("revealSession", true);
+}
+
 /**
  * Persists schedules to the per-project (workspace) target when a folder is
  * open, otherwise to the global (user) target.
