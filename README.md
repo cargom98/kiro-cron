@@ -62,6 +62,17 @@ Standard 5 fields: `minute hour day-of-month month day-of-week`.
 | `kiroCron.schedules`        | `[]`    | resource | The list of schedules for this project.                                     |
 | `kiroCron.timezone`         | `""`    | resource | IANA timezone for cron evaluation (e.g. `America/New_York`). Empty = local. |
 | `kiroCron.catchUpMissedRuns`| `false` | resource | Run a schedule once on startup if its fire time passed while Kiro was closed.|
+| `kiroCron.revealSession`    | `false` | resource | Switch to a run's session when it fires. Steals focus, so off by default.    |
+
+## Notes on sessions
+
+- Scheduled runs reuse one session per schedule (self-healing if it goes stale).
+- By default a run does **not** switch focus — it executes quietly and appears
+  in the session history so you can keep working. Set `kiroCron.revealSession`
+  to `true` if you want it brought to the front each time.
+- The Kiro agent exposes no API to set a session's **title** or **color**, so
+  this extension can't rename or color-code scheduled sessions. Kiro auto-titles
+  each session from its prompt.
 
 ## Limitations
 

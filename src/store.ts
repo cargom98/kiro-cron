@@ -90,11 +90,14 @@ export function getCatchUpMissedRuns(): boolean {
     .get<boolean>("catchUpMissedRuns", false);
 }
 
-/** Whether a scheduled run should be revealed/kept open in the sidebar. */
+/**
+ * Whether to switch to a scheduled run's session when it fires. Off by default
+ * because revealing necessarily steals focus and interrupts your work.
+ */
 export function getRevealSession(): boolean {
   return vscode.workspace
     .getConfiguration(SECTION)
-    .get<boolean>("revealSession", true);
+    .get<boolean>("revealSession", false);
 }
 
 /**

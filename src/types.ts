@@ -9,11 +9,6 @@ export interface Schedule {
   prompt: string;
   /** Whether the schedule is active. Defaults to true when omitted. */
   enabled?: boolean;
-  /**
-   * Optional title for the revealed session. Defaults to "Kiro Cron" when
-   * omitted. Only used when `kiroCron.revealSession` is enabled.
-   */
-  sessionTitle?: string;
 }
 
 /** Runtime status tracked per schedule (not persisted to settings). */

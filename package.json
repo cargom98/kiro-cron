@@ -202,10 +202,6 @@
                 "type": "boolean",
                 "default": true,
                 "description": "Whether this schedule is active."
-              },
-              "sessionTitle": {
-                "type": "string",
-                "description": "Optional title for the revealed session. Defaults to 'Kiro Cron'."
               }
             }
           }
@@ -224,9 +220,9 @@
         },
         "kiroCron.revealSession": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "scope": "resource",
-          "markdownDescription": "When a schedule fires, reveal its session in the sidebar (titled, kept open) instead of leaving it only in history. Note: the Kiro agent does not expose a session-color API, so sessions cannot be color-coded."
+          "markdownDescription": "When a schedule fires, switch to its session. **This steals focus and interrupts your work**, so it is off by default — scheduled runs still execute and appear in history without pulling you away. Note: the Kiro agent exposes no API to set a session title or color, so sessions cannot be renamed or color-coded by this extension."
         }
       }
     }

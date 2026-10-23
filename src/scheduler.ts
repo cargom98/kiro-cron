@@ -6,7 +6,6 @@ import {
   runPrompt,
   isKiroAgentAvailable,
   revealSession,
-  DEFAULT_SESSION_TITLE,
 } from "./kiroAgent";
 
 /**
@@ -177,12 +176,10 @@ export class Scheduler implements vscode.Disposable {
         })`
       );
 
-      // Optionally reveal the session (keep it open + titled) instead of
-      // leaving it only in history. Only meaningful when a new session was
-      // created, or when the user wants it re-focused each run.
+      // Optionally reveal the session. This focuses/switches to it, which
+      // interrupts what you're doing, so it is off by default.
       if (store.getRevealSession()) {
-        const title = schedule.sessionTitle?.trim() || DEFAULT_SESSION_TITLE;
-        await revealSession(run.sessionId, title);
+        await revealSession(run.sessionId);
       }
     } catch (err) {
       rt.lastError = (err as Error).message;
