@@ -19,4 +19,10 @@ export interface ScheduleRuntime {
   lastError?: string;
   /** Computed next fire time (ms), or undefined if the cron is invalid. */
   nextRun?: number;
+  /**
+   * The agent session this schedule reuses across fires. Set after the first
+   * successful run and reused on subsequent runs; cleared/replaced if the
+   * session becomes stale. Not persisted (sessions don't survive reloads).
+   */
+  sessionId?: string;
 }

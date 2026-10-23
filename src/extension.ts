@@ -13,6 +13,18 @@ export async function activate(context: vscode.ExtensionContext) {
   output = vscode.window.createOutputChannel("Kiro Cron");
   context.subscriptions.push(output);
 
+  output.appendLine(
+    `[kiro-cron] activated v${
+      context.extension.packageJSON.version
+    } @ ${new Date().toISOString()}`
+  );
+  output.appendLine(
+    `[kiro-cron] workspace: ${
+      vscode.workspace.workspaceFolders?.map((f) => f.uri.fsPath).join(", ") ??
+      "(none)"
+    }`
+  );
+
   scheduler = new Scheduler(output);
   context.subscriptions.push(scheduler);
 
@@ -76,6 +88,9 @@ export async function activate(context: vscode.ExtensionContext) {
       vscode.commands.executeCommand(
         "workbench.action.openSettingsJson"
       )
+    ),
+    vscode.commands.registerCommand("kiroCron.diagnose", () =>
+      diagnose(context)
     )
   );
 
@@ -121,6 +136,74 @@ export async function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
   scheduler?.dispose();
+}
+
+/**
+ * Prints a full status report to the Output channel and reveals it. This is
+ * the one-stop troubleshooting command.
+ */
+async function diagnose(context: vscode.ExtensionContext): Promise<void> {
+  output.show(true);
+  const line = (s: string) => output.appendLine(s);
+  line("\n========== Kiro Cron diagnostics ==========");
+  line(`time:            ${new Date().toISOString()}`);
+  line(`version:         ${context.extension.packageJSON.version}`);
+  line(
+    `workspace:       ${
+      vscode.workspace.workspaceFolders?.map((f) => f.uri.fsPath).join(", ") ??
+      "(none — schedules use GLOBAL scope)"
+    }`
+  );
+  line(`scheduler on:    ${store.isEnabled()}`);
+  line(`timer running:   ${scheduler.isRunning}`);
+  line(`timezone:        ${store.getTimezone() ?? "(local)"}`);
+  line(`catch-up missed: ${store.getCatchUpMissedRuns()}`);
+
+  const agentOk = await isKiroAgentAvailable();
+  line(`kiro agent cmds: ${agentOk ? "available" : "MISSING"}`);
+  if (!agentOk) {
+    line(
+      "  -> kiroAgent.sessions.create / sendPrompt not found. The Kiro agent " +
+        "must be present for schedules to run."
+    );
+  }
+
+  const schedules = store.getSchedules();
+  line(`schedules:       ${schedules.length}`);
+  if (schedules.length === 0) {
+    line("  -> No schedules for this project. Add one from the Kiro Cron view.");
+  }
+  for (const s of schedules) {
+    const err = validateCron(s.cron);
+    const rt = scheduler.getRuntime(s.id);
+    const next =
+      rt?.nextRun !== undefined
+        ? new Date(rt.nextRun).toLocaleString()
+        : "(none)";
+    line(
+      `  - "${s.name}" [${s.enabled === false ? "disabled" : "enabled"}] ` +
+        `cron="${s.cron}" ${err ? `INVALID: ${err}` : `next=${next}`}` +
+        (rt?.lastRun
+          ? ` lastRun=${new Date(rt.lastRun).toLocaleString()}`
+          : "") +
+        (rt?.lastError ? ` lastError=${rt.lastError}` : "")
+    );
+  }
+
+  // Common-cause summary.
+  line("--- likely reason nothing fires ---");
+  if (!agentOk) line("  * Kiro agent commands missing.");
+  if (!store.isEnabled())
+    line("  * Scheduler is OFF (enable it in the Kiro Cron view).");
+  if (schedules.length === 0) line("  * No schedules defined.");
+  if (
+    agentOk &&
+    store.isEnabled() &&
+    schedules.length > 0 &&
+    schedules.every((s) => s.enabled === false)
+  )
+    line("  * All schedules are individually disabled.");
+  line("===========================================\n");
 }
 
 /** Mirrors the per-project enabled flag into a context key for menu `when`s. */

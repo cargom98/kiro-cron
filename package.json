@@ -72,6 +72,11 @@
         "command": "kiroCron.openSettings",
         "title": "Kiro Cron: Open Schedules (settings.json)",
         "icon": "$(json)"
+      },
+      {
+        "command": "kiroCron.diagnose",
+        "title": "Kiro Cron: Show Diagnostics",
+        "icon": "$(info)"
       }
     ],
     "viewsContainers": {

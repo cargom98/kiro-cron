@@ -160,11 +160,16 @@ export class Scheduler implements vscode.Disposable {
       this.output.appendLine(
         `[scheduler] firing (${reason}) "${schedule.name}" @ ${new Date().toISOString()}`
       );
-      const sessionId = await runPrompt(schedule.prompt);
+      // Reuse the schedule's existing session when we have one; runPrompt
+      // self-heals by creating a fresh session if the old one is stale.
+      const run = await runPrompt(schedule.prompt, rt.sessionId);
+      rt.sessionId = run.sessionId;
       rt.lastRun = Date.now();
       rt.lastError = undefined;
       this.output.appendLine(
-        `[scheduler] "${schedule.name}" -> session ${sessionId}`
+        `[scheduler] "${schedule.name}" -> session ${run.sessionId} (${
+          run.created ? "created new" : "reused"
+        })`
       );
     } catch (err) {
       rt.lastError = (err as Error).message;

@@ -21,6 +21,13 @@ export interface CreateSessionResult {
   sessionId?: string;
 }
 
+export interface RunResult {
+  /** The session the prompt was sent to. */
+  sessionId: string;
+  /** True when a brand-new session was created for this run. */
+  created: boolean;
+}
+
 /** Returns true if the required Kiro agent commands are registered. */
 export async function isKiroAgentAvailable(): Promise<boolean> {
   const all = await vscode.commands.getCommands(true);
@@ -29,15 +36,11 @@ export async function isKiroAgentAvailable(): Promise<boolean> {
   );
 }
 
-/**
- * Creates a fresh Kiro agent session and submits `prompt` to it.
- * Resolves with the sessionId on success; throws on failure.
- */
-export async function runPrompt(prompt: string): Promise<string> {
+/** Creates a fresh Kiro agent session, returning its id. */
+export async function createSession(): Promise<string> {
   const result = (await vscode.commands.executeCommand(
     CMD_SESSION_CREATE
   )) as CreateSessionResult | undefined;
-
   const sessionId = result?.sessionId;
   if (!sessionId) {
     throw new Error(
@@ -46,12 +49,48 @@ export async function runPrompt(prompt: string): Promise<string> {
       )})`
     );
   }
+  return sessionId;
+}
 
+/** Sends `prompt` to an existing session. Throws if the session is invalid. */
+export async function sendPrompt(
+  sessionId: string,
+  prompt: string
+): Promise<void> {
   await vscode.commands.executeCommand(
     CMD_SESSION_SEND_PROMPT,
     sessionId,
     prompt
   );
+}
 
-  return sessionId;
+/**
+ * Submits `prompt` to the Kiro agent, reusing `existingSessionId` when given.
+ *
+ * Reuse strategy:
+ *  - If `existingSessionId` is provided, try sending to it first. This keeps
+ *    successive scheduled runs in the same conversation/session.
+ *  - If that send fails (session was closed, the window reloaded, or the id is
+ *    otherwise stale), fall back to creating a fresh session and retry, so a
+ *    schedule self-heals rather than getting stuck on a dead session.
+ *  - If no id is provided, create a new session.
+ *
+ * Returns the session used and whether it was newly created.
+ */
+export async function runPrompt(
+  prompt: string,
+  existingSessionId?: string
+): Promise<RunResult> {
+  if (existingSessionId) {
+    try {
+      await sendPrompt(existingSessionId, prompt);
+      return { sessionId: existingSessionId, created: false };
+    } catch (err) {
+      // Stale/closed session — fall through to create a fresh one.
+    }
+  }
+
+  const sessionId = await createSession();
+  await sendPrompt(sessionId, prompt);
+  return { sessionId, created: true };
 }
