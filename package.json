@@ -1,0 +1,236 @@
+{
+  "name": "kiro-cron",
+  "displayName": "Kiro Cron",
+  "description": "Schedule Kiro agent prompts and workflows to run on a cron schedule.",
+  "version": "0.1.0",
+  "publisher": "gomezmera",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gomezmera/kiro-cron.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "kiro",
+    "cron",
+    "schedule",
+    "agent",
+    "automation"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "kiroCron.enableScheduler",
+        "title": "Kiro Cron: Enable Scheduler (this project)",
+        "icon": "$(play-circle)"
+      },
+      {
+        "command": "kiroCron.disableScheduler",
+        "title": "Kiro Cron: Disable Scheduler (this project)",
+        "icon": "$(stop-circle)"
+      },
+      {
+        "command": "kiroCron.addSchedule",
+        "title": "Kiro Cron: Add Schedule",
+        "icon": "$(add)"
+      },
+      {
+        "command": "kiroCron.editSchedule",
+        "title": "Kiro Cron: Edit Schedule",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "kiroCron.deleteSchedule",
+        "title": "Kiro Cron: Delete Schedule",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "kiroCron.toggleSchedule",
+        "title": "Kiro Cron: Enable/Disable Schedule"
+      },
+      {
+        "command": "kiroCron.runNow",
+        "title": "Kiro Cron: Run Schedule Now",
+        "icon": "$(play)"
+      },
+      {
+        "command": "kiroCron.refresh",
+        "title": "Kiro Cron: Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "kiroCron.openSettings",
+        "title": "Kiro Cron: Open Schedules (settings.json)",
+        "icon": "$(json)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "kiroCron",
+          "title": "Kiro Cron",
+          "icon": "$(clock)"
+        }
+      ]
+    },
+    "views": {
+      "kiroCron": [
+        {
+          "id": "kiroCron.schedules",
+          "name": "Schedules",
+          "icon": "$(clock)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "kiroCron.schedules",
+        "contents": "No schedules for this project yet.\n[Add Schedule](command:kiroCron.addSchedule)\n[Enable Scheduler](command:kiroCron.enableScheduler)\nSchedules are per-project and run Kiro agent prompts on a cron timer while the IDE is open. The scheduler is off until you enable it for this project."
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "kiroCron.enableScheduler",
+          "when": "view == kiroCron.schedules && !kiroCron.enabled",
+          "group": "navigation@0"
+        },
+        {
+          "command": "kiroCron.disableScheduler",
+          "when": "view == kiroCron.schedules && kiroCron.enabled",
+          "group": "navigation@0"
+        },
+        {
+          "command": "kiroCron.addSchedule",
+          "when": "view == kiroCron.schedules",
+          "group": "navigation@1"
+        },
+        {
+          "command": "kiroCron.refresh",
+          "when": "view == kiroCron.schedules",
+          "group": "navigation@2"
+        },
+        {
+          "command": "kiroCron.openSettings",
+          "when": "view == kiroCron.schedules",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "kiroCron.runNow",
+          "when": "view == kiroCron.schedules && viewItem == schedule",
+          "group": "inline@1"
+        },
+        {
+          "command": "kiroCron.editSchedule",
+          "when": "view == kiroCron.schedules && viewItem == schedule",
+          "group": "inline@2"
+        },
+        {
+          "command": "kiroCron.toggleSchedule",
+          "when": "view == kiroCron.schedules && viewItem == schedule",
+          "group": "1_modify@1"
+        },
+        {
+          "command": "kiroCron.editSchedule",
+          "when": "view == kiroCron.schedules && viewItem == schedule",
+          "group": "1_modify@2"
+        },
+        {
+          "command": "kiroCron.deleteSchedule",
+          "when": "view == kiroCron.schedules && viewItem == schedule",
+          "group": "2_danger@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Kiro Cron",
+      "properties": {
+        "kiroCron.enabled": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "markdownDescription": "Master switch for the scheduler, **per project**. When `false` (the default) no schedules fire, even if individually enabled. Turn it on from the Kiro Cron view or here. Stored in the workspace so each project decides independently."
+        },
+        "kiroCron.schedules": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "markdownDescription": "List of scheduled Kiro agent activities, **per project**. Each entry has a cron expression and a prompt. Stored in the workspace so schedules differ between projects.",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "cron",
+              "prompt"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique id (generated automatically)."
+              },
+              "name": {
+                "type": "string",
+                "description": "Human-readable name."
+              },
+              "cron": {
+                "type": "string",
+                "description": "Standard 5-field cron expression (min hour dom mon dow)."
+              },
+              "prompt": {
+                "type": "string",
+                "description": "Prompt text sent to the Kiro agent when the schedule fires."
+              },
+              "enabled": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether this schedule is active."
+              }
+            }
+          }
+        },
+        "kiroCron.timezone": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "IANA timezone for evaluating cron expressions (e.g. 'America/New_York'). Empty uses the local system timezone."
+        },
+        "kiroCron.catchUpMissedRuns": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "description": "If true, a schedule whose fire time was missed while the IDE was closed runs once when the scheduler is enabled on startup."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",
+    "watch": "npm run build -- --sourcemap --watch",
+    "compile-check": "tsc --noEmit -p .",
+    "package": "vsce package --no-dependencies",
+    "reinstall": "npm run build && npx --yes @vscode/vsce@latest package --no-dependencies && kiro --install-extension kiro-cron-$npm_package_version.vsix --force"
+  },
+  "dependencies": {
+    "cron-parser": "^5.10.2"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.4.0"
+  }
+}
